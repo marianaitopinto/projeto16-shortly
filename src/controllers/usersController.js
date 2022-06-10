@@ -12,7 +12,8 @@ export async function getUser(req, res) {
         if (Number(id) !== Number(userId)) return res.sendStatus(401);
 
         const { rows: userInfo } = await db.query(`
-        SELECT users.id, users.name, sum(urls.visits) as "VisitCount" from users
+        SELECT users.id, users.name, sum(urls.visits) as "VisitCount" 
+        FROM users
         LEFT JOIN urls ON users.id = urls."userId"
         WHERE users.id = $1
         GROUP BY users.id;
@@ -20,16 +21,35 @@ export async function getUser(req, res) {
 
         console.log(userInfo)
 
-        const {rows: userUrls } = await db.query(`
+        const { rows: userUrls } = await db.query(`
         SELECT id, "shortUrl", url, visits AS "visitCount"
         FROM urls
         WHERE "userId"=$1
         `, [id]);
 
         const shortenedUrls = userUrls;
-        const userResponse = {...userInfo[0], shortenedUrls};
+        const userResponse = { ...userInfo[0], shortenedUrls };
 
         res.status(200).send(userResponse);
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+}
+
+export async function getRanking(req, res) {
+
+    try {
+        const { rows: ranking } = await db.query(`
+        SELECT users.id, users.name, COUNT(urls.url) AS "linksCount", sum(COALESCE(urls.visits, 0)) as "visitCount"
+        FROM users
+        LEFT JOIN urls ON users.id = urls."userId"
+        GROUP BY users.id
+        ORDER BY "visitCount" DESC
+        LIMIT 10
+        `)
+
+        res.status(200).send(ranking);
 
     } catch (error) {
         res.status(500).send(error);
