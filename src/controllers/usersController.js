@@ -12,14 +12,12 @@ export async function getUser(req, res) {
         if (Number(id) !== Number(userId)) return res.sendStatus(401);
 
         const { rows: userInfo } = await db.query(`
-        SELECT users.id, users.name, sum(urls.visits) as "VisitCount" 
+        SELECT users.id, users.name, sum(COALESCE(urls.visits, 0)) as "VisitCount" 
         FROM users
         LEFT JOIN urls ON users.id = urls."userId"
         WHERE users.id = $1
         GROUP BY users.id;
         `, [id]);
-
-        console.log(userInfo)
 
         const { rows: userUrls } = await db.query(`
         SELECT id, "shortUrl", url, visits AS "visitCount"
