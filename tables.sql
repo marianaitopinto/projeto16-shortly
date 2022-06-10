@@ -12,3 +12,12 @@ id serial PRIMARY KEY,
 token text NOT NULL UNIQUE,
 "createdAt" timestamp NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE urls (
+id serial PRIMARY KEY,
+"userId" integer NOT NULL REFERENCES users("id"),
+url text NOT NULL,
+"shortUrl" text NOT NULL UNIQUE,
+visits bigint NOT NULL DEFAULT 0,
+"createdAt" timestamp NOT NULL DEFAULT NOW()
+)
