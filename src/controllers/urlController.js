@@ -60,3 +60,28 @@ export async function operUrl(req, res) {
         res.status(500).send(error);
     }
 }
+
+export async function deleteUrl(req, res) {
+    const { id } = req.params;
+    const userId = res.locals.user.id;
+
+    try {
+        const { rows: urls } = await db.query(`SELECT * FROM urls WHERE id=$1`, [id]);
+        const [url] = urls;
+
+        if (!url) return res.sendStatus(404);
+
+        if (url.userId !== userId) return res.sendStatus(401);
+
+        await db.query(`
+        DELETE FROM urls
+        WHERE id=$1 AND "userId"=$2
+        `, [id, userId]);
+
+        res.sendStatus(204);
+
+    } catch (error) {
+        res.status(500).send(error);
+    }
+
+}
